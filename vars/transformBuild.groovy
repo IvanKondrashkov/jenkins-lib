@@ -1,13 +1,18 @@
 def call(String baseUrl, String branch) {
     def moduleUtils = library('jenkins-lib').ModuleUtils.new()
     def module = moduleUtils.getModuleName(branch)
+    def isRootProject = moduleUtils.isRootProject(module)
     return  {
         node  {
             git branch: branch, url: baseUrl
-            moduleUtils.printSysTime(branch)
+            echo moduleUtils.printSysTime(branch)
             withGradle {
                 sh 'chmod +x gradlew'
-                sh "./gradlew ${module}:clean ${module}:build"
+                if (isRootProject) {
+                    sh "./gradlew clean build"
+                } else {
+                    sh "./gradlew ${module}:clean ${module}:build"
+                }
                 sleep 10
             }
 
